@@ -1,0 +1,9 @@
+{
+    "java.compile.nullAnalysis.mode": "disabled",
+    "java.saveActions.cleanup": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit" 
+    },
+    "java.debug.settings.hotCodeReplace": "auto",
+    "java.configuration.updateBuildConfiguration": "interactive"
+}
