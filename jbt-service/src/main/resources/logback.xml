@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+中文文档：http://www.logback.cn
+https://juejin.im/post/5de116a16fb9a07158008886
+
+slf4j 接管： http://www.slf4j.org/legacy.html
+-->
+
+<configuration scan="false" scanPeriod="60 second" debug="false">
+    <property name="APP_NAME" value="${app.name:-app-beibeiyu}"/>
+    <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径-->
+    <property name="LOG_HOME" value="${LOG_HOME:-.}/nfslocal/app-logs"/>
+    <property name="CONSOLE_ENCODING" value="${console.encoding:-UTF-8}"/>
+    <!-- 该参数可以通过 jvm 环境变量覆盖: -Dlogstash.destination.app=localhost:4560 -->
+    <property name="LOGSTASH_DESTINATION_APP" value="${logstash.destination.app:-localhost:4560}"/>
+
+    <!-- 负责写日志,控制台日志 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <encoder>
+            <pattern>%highlight([%d{yyyy-MM-dd HH:mm:ss.SSS}] %5level %50logger{50} %t[%X{Trace_Id}] : %m%n)
+            </pattern>
+            <charset>${CONSOLE_ENCODING}</charset>
+        </encoder>
+    </appender>
+
+    <!-- 滚动记录文件，先将日志记录到指定文件，当符合某个条件时，将日志记录到其他文件 -->
+    <appender name="APP" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${HOST_NAME}_${APP_NAME}.log</file>
+        <encoder>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %5level %50logger{50} %t[%X{Trace_Id}] : %m%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${HOST_NAME}_${APP_NAME}.%d{yyyyMMdd}_%i.log.gz</fileNamePattern>
+            <!-- 文件最大保存历史数量 -->
+            <maxHistory>30</maxHistory>
+            <!-- 删除过期文件 -->
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!--文件达到 最大500MB时会被压缩和切割 -->
+                <maxFileSize>500MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="APP_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 过滤日志 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+
+        <file>${LOG_HOME}/${HOST_NAME}_${APP_NAME}.error.log</file>
+        <encoder>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] %5level %50logger{50} %t[%X{Trace_Id}] : %m%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/error.${HOST_NAME}_${APP_NAME}.%d{yyyyMMdd}_%i.log.gz</fileNamePattern>
+            <maxFileSize>500MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="APP_ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 默认如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志，若要保留全部日志，设置为0 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!--队列的最大容量，默认为 256-->
+        <queueSize>1024</queueSize>
+        <appender-ref ref="APP"/>
+    </appender>
+
+    <appender name="APP_ASYNC_ERROR" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 默认如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志，若要保留全部日志，设置为0 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!--队列的最大容量，默认为 256-->
+        <queueSize>1024</queueSize>
+        <appender-ref ref="APP_ERROR"/>
+    </appender>
+
+    <!-- 打印编译完成的sql语句 -->
+    <logger name="org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl" level="INFO"/>
+    <logger name="org.hibernate.engine.internal.TwoPhaseLoad" level="INFO"/>
+    <logger name="org.hibernate.hql.internal.ast.QueryTranslatorImpl" level="INFO"/>
+    <logger name="org.hibernate.loader.Loader" level="INFO"/>
+    <!-- 打印 Controller 注册url -->
+    <logger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping" level="TRACE"/>
+    <!-- 已经配置AOP拦截了，不需要再打印 Controller 返回的结果 -->
+    <logger name="org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor"
+            level="INFO"/>
+    <logger name="org.apache.commons.beanutils.converters.AbstractConverter" level="INFO"/>
+    <logger name="com.zaxxer.hikari.pool.HikariPool" level="INFO"/>
+    <logger name="org.mongodb.driver" level="INFO"/>
+    <logger name="org.apache.commons.beanutils.converters" level="INFO"/>
+    <logger name="org.springframework.validation.DataBinder" level="OFF"/>
+    <logger name="springfox.documentation.spring.web.readers.operation.CachingOperationNameGenerator" level="OFF"/>
+    <logger name="springfox.documentation.spring.web.scanners.ApiListingReferenceScanner" level="OFF"/>
+    <logger name="org.apache.http.wire" level="INFO"/>
+
+    <logger name="druid.sql.Statement" level="WARN" additivity="false">
+        <appender-ref ref="APP_ASYNC"/>
+    </logger>
+
+    <logger name="org.hibernate.soL" level="DEBUG"/>
+    <logger name="org.hibernate.engine.QueryParameters" level="DEBUG"/>
+    <logger name="org.hibernate.engine.query.HOLQueryplan" level="DEBUG"/>
+
+    <root level="DEBUG">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="APP_ASYNC"/>
+        <appender-ref ref="APP_ASYNC_ERROR"/>
+    </root>
+
+</configuration>
