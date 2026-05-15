@@ -56,6 +56,7 @@
 - Hibernate Validator（参数校验）
 - SLF4J + Logback（日志）
 - SpringDoc OpenAPI + Knife4j（API 文档）
+- Spring Boot Actuator + Micrometer Prometheus（监控）
 - commons-lang3（通用工具）
 - JUnit + Mockito（测试）
 
@@ -72,26 +73,26 @@
 
 ## 当前包含的能力
 
-- [x] Spring Boot 多模块启动工程
-- [x] 分层目录结构（common / service 模块拆分）
+- [x] Spring Boot 多模块启动工程（jbt-common + jbt-service）
+- [x] 统一响应体封装（`R<T>`，含 code / msg / traceId / data）
+- [x] 统一错误码枚举（`HttpStatusEnums`，200 / 400 / 401 / 403 / 404 / 500 等）
+- [x] 全局异常处理（`@RestControllerAdvice`，覆盖未知异常、业务异常、参数校验异常）
+- [x] 业务异常类（`BusinessException`，支持自定义 code + message）
 - [x] Jackson 统一序列化配置（Long 转 String、LocalDateTime 格式化、枚举按 code 序列化）
-- [x] 自定义 JsonUtils 工具类（支持属性过滤、动态包含/排除字段）
-- [x] 全局日期处理（DateUtils / DatePattern，支持多种日期格式解析与转换）
-- [x] 自定义 StringUtils / ObjectUtils / EnumUtils / ReflectUtils 工具类
-- [x] 参数校验依赖（spring-boot-starter-validation）
-- [x] Logback 日志规范（控制台 + 文件 + 错误日志分离 + 异步输出）
-- [x] Maven 多环境配置（dev / test / prod profile）
+- [x] 自定义工具类（`JsonUtils` / `DateUtils` / `StringUtils` / `ObjectUtils` / `EnumUtils` / `ReflectUtils`）
+- [x] 日期常量定义（`DatePattern`，覆盖常用格式 + `DateTimeFormatter` + `FastDateFormat`）
+- [x] 参数校验支持（spring-boot-starter-validation）
+- [x] Logback 日志规范（控制台高亮 + 文件滚动 + 错误日志分离 + 异步 Appender）
+- [x] Maven 多环境配置（dev / test / prod profile，dev 为默认）
 - [x] Swagger / Knife4j API 文档集成
-- [x] 示例启动类（含系统环境变量日志打印）
+- [x] Prometheus 指标暴露（Actuator + Micrometer，management 端口 8091）
+- [x] 启动时打印系统环境变量
 
 后续计划逐步增加：
 
-- [ ] 统一响应体封装
-- [ ] 全局异常处理
 - [ ] 数据库访问示例
 - [ ] Redis 示例
 - [ ] 接口幂等示例
-- [ ] 统一错误码设计
 - [ ] 链路追踪接入
 - [ ] 审计日志
 - [ ] Docker 部署支持
@@ -104,33 +105,41 @@
 ```text
 java-backend-template
 ├── pom.xml                          # 父 POM，依赖管理与多模块聚合
-├── jbt-common                       # 通用模块（工具类、序列化器、常量）
+├── jbt-common                       # 通用模块（工具类、序列化器、异常、响应体）
 │   ├── pom.xml
 │   └── src/main/java/com/example/jbt/common
-│       ├── aop
-│       │   ├── deserializer         # Jackson 反序列化器
+│       ├── aop/advice
+│       │   └── GlobalExceptionHandler.java   # 全局异常处理
+│       ├── codec
+│       │   ├── deserializer
 │       │   │   └── LocalDateTimeDeserializer.java
-│       │   └── serializer           # Jackson 序列化器
+│       │   └── serializer
 │       │       ├── LocalDateTimeSerializer.java
 │       │       └── LongToStringSerializer.java
-│       ├── constants                # 常量定义
+│       ├── constants
 │       │   ├── CommonConstants.java
-│       │   └── DatePattern.java     # 日期格式常量（含 Formatter）
-│       └── utils                    # 通用工具类
-│           ├── DateUtils.java       # 日期工具（解析/格式化/范围计算）
-│           ├── EnumUtils.java       # 枚举工具（按 code/ordinal 互转）
-│           ├── JsonUtils.java       # JSON 工具（序列化/反序列化/属性过滤）
-│           ├── ObjectUtils.java     # 对象判空/类型判断
-│           ├── ReflectUtils.java    # 反射工具（字段获取/值读写）
-│           └── StringUtils.java     # 字符串工具（驼峰/下划线/随机数等）
+│       │   └── DatePattern.java             # 日期格式常量
+│       ├── enums
+│       │   └── HttpStatusEnums.java         # 统一错误码枚举
+│       ├── exception
+│       │   └── BusinessException.java       # 业务异常
+│       ├── result
+│       │   └── R.java                       # 统一响应体
+│       └── utils
+│           ├── DateUtils.java
+│           ├── EnumUtils.java
+│           ├── JsonUtils.java
+│           ├── ObjectUtils.java
+│           ├── ReflectUtils.java
+│           └── StringUtils.java
 ├── jbt-service                      # 启动模块（Spring Boot 应用入口）
 │   ├── pom.xml
 │   └── src/main
 │       ├── java/com/example/jbt/service
-│       │   └── Application.java     # Spring Boot 启动类
-│       └── resource
-│           ├── application.xml      # 服务配置（端口等）
-│           └── logback.xml          # Logback 日志配置
+│       │   └── Application.java             # Spring Boot 启动类
+│       └── resources
+│           ├── application.yml              # 服务配置与管理端点配置
+│           └── logback.xml                  # Logback 日志配置
 └── README.md
 ```
 
@@ -153,7 +162,7 @@ cd java-backend-template
 # 编译打包（跳过测试）
 mvn clean package -DskipTests
 
-# 启动服务（默认 dev 环境，端口 8080）
+# 启动服务（默认 dev 环境，业务端口 8080）
 mvn spring-boot:run -pl jbt-service
 ```
 
@@ -173,14 +182,76 @@ mvn spring-boot:run -pl jbt-service -Pprod
 
 | 模块 | 说明 |
 |------|------|
-| `jbt-common` | 通用基础模块，包含工具类、序列化器、常量等，不包含启动类 |
+| `jbt-common` | 通用基础模块，包含工具类、序列化器、枚举、异常、统一响应体、全局异常处理等，不包含启动类 |
 | `jbt-service` | 服务启动模块，依赖 `jbt-common`，包含 Spring Boot 启动入口与资源文件 |
+
+---
+
+## 端口说明
+
+| 端口 | 用途 |
+|------|------|
+| 8080 | 业务端口（server.port） |
+| 8091 | 管理端口（management.server.port），暴露 Actuator 端点 |
+
+### Actuator 端点
+
+启动后可通过管理端口访问：
+
+- `http://localhost:8091/actuator/health` — 健康检查
+- `http://localhost:8091/actuator/prometheus` — Prometheus 指标
+- `http://localhost:8091/actuator/metrics` — 所有指标列表
+
+---
+
+## 统一响应格式
+
+所有接口返回统一封装为 `R<T>`，结构如下：
+
+```json
+{
+  "code": 200,
+  "msg": "操作成功",
+  "traceId": "abc123...",
+  "data": {}
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| code | int | 状态码，对应 `HttpStatusEnums` |
+| msg | string | 提示信息 |
+| traceId | string | 链路追踪 ID |
+| data | T | 业务数据 |
+
+### 错误码
+
+| code | 含义 |
+|------|------|
+| 200 | 操作成功 |
+| 400 | 参数错误 |
+| 401 | 未授权 |
+| 403 | 访问受限 |
+| 404 | 资源未找到 |
+| 500 | 系统内部错误 |
+
+完整定义见 `HttpStatusEnums.java`。
+
+### 异常处理
+
+全局异常处理器（`GlobalExceptionHandler`）统一拦截三类异常：
+
+| 异常类型 | 处理方式 |
+|---------|---------|
+| `Exception` | 返回 500，记录完整栈 |
+| `BusinessException` | 返回自定义 code + message |
+| `MethodArgumentNotValidException` | 返回 400 + 第一条校验错误 |
 
 ---
 
 ## 日志说明
 
-日志配置位于 `jbt-service/src/main/resource/logback.xml`，包含以下 Appender：
+日志配置位于 `jbt-service/src/main/resources/logback.xml`，包含以下 Appender：
 
 - **CONSOLE**：控制台输出，带高亮，`INFO` 级别
 - **APP_ASYNC**：异步文件日志，按天 + 大小（500MB）滚动，保留 30 天
@@ -190,7 +261,7 @@ mvn spring-boot:run -pl jbt-service -Pprod
 
 ```bash
 -DLOG_HOME=/your/log/path          # 日志存储目录，默认 ./nfslocal/app-logs
--Dapp.name=your-app-name           # 应用名称，默认 app-beibeiyu
+-Dapp.name=your-app-name           # 应用名称
 ```
 
 ---
