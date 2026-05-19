@@ -1,6 +1,7 @@
 package com.example.jbt.common.result;
 
 import com.example.jbt.common.enums.HttpStatusEnums;
+import com.example.jbt.common.utils.TraceIdUtils;
 
 public class R<T> {
 
@@ -29,11 +30,7 @@ public class R<T> {
     }
 
     public String getTraceId() {
-        return traceId;
-    }
-
-    public void setTraceId(String traceId) {
-        this.traceId = traceId;
+        return TraceIdUtils.getTraceId();
     }
 
     public T getData() {
