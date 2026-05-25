@@ -10,7 +10,7 @@ slf4j 接管： http://www.slf4j.org/legacy.html
 <configuration scan="false" scanPeriod="60 second" debug="false">
     <property name="APP_NAME" value="${app.name:-app-beibeiyu}"/>
     <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径-->
-    <property name="LOG_HOME" value="${LOG_HOME:-.}/nfslocal/app-logs"/>
+    <property name="LOG_HOME" value="${LOG_HOME:-.}/logs"/>
     <property name="CONSOLE_ENCODING" value="${console.encoding:-UTF-8}"/>
     <!-- 该参数可以通过 jvm 环境变量覆盖: -Dlogstash.destination.app=localhost:4560 -->
     <property name="LOGSTASH_DESTINATION_APP" value="${logstash.destination.app:-localhost:4560}"/>

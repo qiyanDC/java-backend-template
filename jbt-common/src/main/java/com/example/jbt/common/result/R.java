@@ -3,14 +3,22 @@ package com.example.jbt.common.result;
 import com.example.jbt.common.enums.HttpStatusEnums;
 import com.example.jbt.common.utils.TraceIdUtils;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "统一响应体封装", description = "统一响应体封装")
 public class R<T> {
 
+    @Schema(description = "返回参数")
     private int code;
 
+    @Schema(description = "返回信息")
     private String msg;
 
+    @Schema(description = "链路追踪id")
     private String traceId;
 
+    @Schema(description = "返回对象")
     private T data;
 
     public int getCode() {
