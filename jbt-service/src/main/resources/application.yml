@@ -3,6 +3,8 @@ server:
 spring:
   application:
     name: java-backend-template
+  profiles:
+    active: local
 management:
   server:
     port: 8091
