@@ -14,7 +14,7 @@ import org.springframework.context.ApplicationListener;
 
 import com.example.jbt.common.utils.JsonUtils;
 
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class}, scanBasePackages = "com.example.jbt")
 public class Application {
 
     private static final Logger log = LoggerFactory.getLogger(Application.class);

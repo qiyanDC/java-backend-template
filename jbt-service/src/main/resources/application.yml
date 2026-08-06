@@ -3,6 +3,7 @@ server:
 spring:
   application:
     name: java-backend-template
+    version: '@version@'
   profiles:
     active: local
 management:

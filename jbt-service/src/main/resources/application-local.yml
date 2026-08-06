@@ -1,4 +1,9 @@
 spring:
+  app:
+    name: ${spring.application.name}
+    env: local
+    version: ${spring.application.version}
+    port: ${server.port}
   redis:
     host: 127.0.0.1
     post: 6379
