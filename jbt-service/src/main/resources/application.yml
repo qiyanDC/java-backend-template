@@ -15,8 +15,9 @@ management:
         include: "*"
   endpoint:
     health:
-      show:
-        details: always
+      show-details: always
+    shutdown:
+      enabled: true
   metrics:
     tags:
       application: ${spring.application.name}
