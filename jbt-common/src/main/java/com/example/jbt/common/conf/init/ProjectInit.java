@@ -50,7 +50,7 @@ public class ProjectInit implements ApplicationContextAware {
                     .append(String.format("%s【%s】 : %s\n", "spring.application.version", "当前运行版本号", appProperties.getVersion()))
                     .append(String.format("%s【%s】 : %s\n", "spring.app.env", "当前环境：[dev:本地|uat:UAT测试|beta:测试|prod:生产]", appProperties.getEnv()))
                     .append(String.format("%s【%s】 : %s\n", "spring.app.ip", "当前主机 IP 地址", appProperties.getIp()))
-                    .append(String.format("%s【%s】 : %s\n", "server.port", "当前服务端口", appProperties.getPort()));
+                    .append(String.format("%s【%s】 : %s", "server.port", "当前服务端口", appProperties.getPort()));
             log.info("\n┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬ 环境配置 ┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬\n{}\n┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴ 环境配置 ┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴┴", config.toString());
         };
     }
