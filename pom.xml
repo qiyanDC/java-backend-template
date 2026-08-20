@@ -11,6 +11,7 @@
 
     <modules>
         <module>jbt-common</module>
+        <module>jbt-data</module>
         <module>jbt-business</module>
         <module>jbt-service</module><!-- 组合打包所有发布模块，避免出现循环依赖 -->
     </modules>
@@ -22,6 +23,8 @@
         <maven.compiler.target>25</maven.compiler.target>
         <maven.compiler.source>25</maven.compiler.source>
         <springboot.version>3.5.14</springboot.version>
+        <postgresql.version>42.7.13</postgresql.version>
+        <mybatis-plus.version>3.5.17</mybatis-plus.version>
         <slf4j.version>2.0.13</slf4j.version>
         <logback.version>1.5.32</logback.version>
         <junit.version>4.13.2</junit.version>
@@ -51,6 +54,25 @@
                 <artifactId>spring-boot-starter-jdbc</artifactId>
                 <version>${springboot.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
+            </dependency>
+
+            <!-- MyBatis Plus依赖 -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+                <version>${mybatis-plus.version}</version> <!--建议使用3.5.5以上的最新版-->
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-jsqlparser</artifactId>
+                <version>${mybatis-plus.version}</version> <!--建议使用3.5.5以上的最新版-->
+            </dependency>
+            <!-- MyBatis Plus依赖 -->
 
             <!-- 日志工具包 -->
             <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->

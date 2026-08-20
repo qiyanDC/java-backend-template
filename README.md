@@ -52,9 +52,13 @@
 - Spring Boot 3.5.14
 - Maven（多模块）
 - Undertow（Web 容器，替代 Tomcat）
+- PostgreSQL（数据库）
+- MyBatis Plus 3.5.17（ORM + 分页 + 防全表更新删除）
+- Spring Data Redis + Lettuce（Redis 客户端）
+- Spring AOP
 - Jackson（JSON 序列化，含自定义 Long/String、日期序列化器）
 - Hibernate Validator（参数校验）
-- SLF4J + Logback（日志）
+- SLF4J + Logback（日志，含 MDC 链路追踪）
 - SpringDoc OpenAPI + Knife4j（API 文档）
 - Spring Boot Actuator + Micrometer Prometheus（监控）
 - commons-lang3（通用工具）
@@ -62,8 +66,6 @@
 
 后续可按版本逐步扩展：
 
-- MyBatis / JPA
-- Redis
 - RabbitMQ / Kafka
 - Docker
 - Spring Security
@@ -73,27 +75,28 @@
 
 ## 当前包含的能力
 
-- [x] Spring Boot 多模块启动工程（jbt-common + jbt-service）
+- [x] Spring Boot 多模块启动工程（jbt-common + jbt-data + jbt-business + jbt-service）
 - [x] 统一响应体封装（`R<T>`，含 code / msg / traceId / data）
 - [x] 统一错误码枚举（`HttpStatusEnums`，200 / 400 / 401 / 403 / 404 / 500 等）
 - [x] 全局异常处理（`@RestControllerAdvice`，覆盖未知异常、业务异常、参数校验异常）
 - [x] 业务异常类（`BusinessException`，支持自定义 code + message）
 - [x] Jackson 统一序列化配置（Long 转 String、LocalDateTime 格式化、枚举按 code 序列化）
-- [x] 自定义工具类（`JsonUtils` / `DateUtils` / `StringUtils` / `ObjectUtils` / `EnumUtils` / `ReflectUtils`）
+- [x] 自定义工具类（`JsonUtils` / `DateUtils` / `StringUtils` / `ObjectUtils` / `EnumUtils` / `ReflectUtils` / `BeanUtils` / `HostUtils` / `TraceIdUtils`）
 - [x] 日期常量定义（`DatePattern`，覆盖常用格式 + `DateTimeFormatter` + `FastDateFormat`）
 - [x] 参数校验支持（spring-boot-starter-validation）
 - [x] Logback 日志规范（控制台高亮 + 文件滚动 + 错误日志分离 + 异步 Appender）
 - [x] Maven 多环境配置（dev / test / prod profile，dev 为默认）
 - [x] Swagger / Knife4j API 文档集成
 - [x] Prometheus 指标暴露（Actuator + Micrometer，management 端口 8091）
-- [x] 启动时打印系统环境变量
+- [x] 启动时打印环境变量与项目配置信息
+- [x] Redis 集成（Lettuce 连接 + Jackson 序列化）
+- [x] 健康检查端点（Redis 状态检测）
+- [x] 链路追踪（MDC + TraceIdInterceptor，自动注入 traceId 到响应体与日志）
+- [x] 数据库访问（PostgreSQL + MyBatis Plus，含分页插件、防全表更新删除）
 
 后续计划逐步增加：
 
-- [ ] 数据库访问示例
-- [ ] Redis 示例
 - [ ] 接口幂等示例
-- [ ] 链路追踪接入
 - [ ] 审计日志
 - [ ] Docker 部署支持
 - [ ] GitHub Actions 基础 CI
@@ -105,7 +108,7 @@
 ```text
 java-backend-template
 ├── pom.xml                          # 父 POM，依赖管理与多模块聚合
-├── jbt-common                       # 通用模块（工具类、序列化器、异常、响应体）
+├── jbt-common                       # 通用模块（工具类、配置、基础能力）
 │   ├── pom.xml
 │   └── src/main/java/com/example/jbt/common
 │       ├── aop/advice
@@ -116,6 +119,16 @@ java-backend-template
 │       │   └── serializer
 │       │       ├── LocalDateTimeSerializer.java
 │       │       └── LongToStringSerializer.java
+│       ├── conf
+│       │   ├── AppProperties.java           # spring.app.* 配置属性
+│       │   ├── HealthConfig.java            # Redis 健康检查配置
+│       │   ├── MybatisPlusConfig.java       # MyBatis Plus 配置（分页、防全表更新删除）
+│       │   ├── RedisConfig.java             # RedisTemplate 配置
+│       │   ├── WebMvcConfig.java            # WebMvc 拦截器注册
+│       │   ├── init
+│       │   │   └── ProjectInit.java         # 启动初始化与配置打印
+│       │   └── interceptor
+│       │       └── TraceIdInterceptor.java  # 链路追踪拦截器
 │       ├── constants
 │       │   ├── CommonConstants.java
 │       │   └── DatePattern.java             # 日期格式常量
@@ -126,12 +139,24 @@ java-backend-template
 │       ├── result
 │       │   └── R.java                       # 统一响应体
 │       └── utils
+│           ├── BeanUtils.java               # Spring 上下文工具
 │           ├── DateUtils.java
 │           ├── EnumUtils.java
+│           ├── HostUtils.java               # 本机 IP 获取工具
 │           ├── JsonUtils.java
 │           ├── ObjectUtils.java
 │           ├── ReflectUtils.java
-│           └── StringUtils.java
+│           ├── StringUtils.java
+│           └── TraceIdUtils.java            # MDC 链路追踪工具
+├── jbt-business                     # 业务模块（控制器、服务层）
+│   ├── pom.xml
+│   └── src/main/java/com/example/jbt/business
+│       ├── controller
+│       │   └── HealthController.java        # 健康检查接口
+│       └── service
+│           ├── HealthService.java
+│           └── impl
+│               └── HealthServiceImpl.java   # Redis 健康状态检测
 ├── jbt-service                      # 启动模块（Spring Boot 应用入口）
 │   ├── pom.xml
 │   └── src/main
@@ -139,6 +164,7 @@ java-backend-template
 │       │   └── Application.java             # Spring Boot 启动类
 │       └── resources
 │           ├── application.yml              # 服务配置与管理端点配置
+│           ├── application-local.yml        # 本地环境配置（Redis 等）
 │           └── logback.xml                  # Logback 日志配置
 └── README.md
 ```
@@ -151,6 +177,7 @@ java-backend-template
 
 - JDK 25+
 - Maven 3.6+
+- Redis（可选，用于缓存与健康检查）
 
 ### 本地启动
 
@@ -182,8 +209,9 @@ mvn spring-boot:run -pl jbt-service -Pprod
 
 | 模块 | 说明 |
 |------|------|
-| `jbt-common` | 通用基础模块，包含工具类、序列化器、枚举、异常、统一响应体、全局异常处理等，不包含启动类 |
-| `jbt-service` | 服务启动模块，依赖 `jbt-common`，包含 Spring Boot 启动入口与资源文件 |
+| `jbt-common` | 通用基础模块，包含工具类、序列化器、配置类、拦截器、异常、统一响应体、全局异常处理等，不包含启动类 |
+| `jbt-business` | 业务模块，依赖 `jbt-common`，包含控制器、服务层、业务逻辑实现 |
+| `jbt-service` | 服务启动模块，依赖 `jbt-business`，包含 Spring Boot 启动入口与资源文件 |
 
 ---
 
@@ -246,6 +274,53 @@ mvn spring-boot:run -pl jbt-service -Pprod
 | `Exception` | 返回 500，记录完整栈 |
 | `BusinessException` | 返回自定义 code + message |
 | `MethodArgumentNotValidException` | 返回 400 + 第一条校验错误 |
+
+---
+
+## 链路追踪
+
+项目通过 MDC（Mapped Diagnostic Context）实现了请求级链路追踪，无需额外依赖。
+
+### 实现方式
+
+- `TraceIdInterceptor`：拦截所有请求（`/**`），从请求头 `Trace_Id` 提取 traceId，若不存在则自动生成 UUID
+- `TraceIdUtils`：基于 MDC 管理 traceId 的存取，线程安全
+- `R<T>`：响应体自动注入当前 traceId
+- Logback：日志 Pattern 中包含 `%X{Trace_Id}`，所有日志自动携带 traceId
+
+### 日志效果
+
+```text
+2026-08-06 10:00:00.000 INFO 8080 --- [  XNIO-1] c.e.j.c.a.a.GlobalExceptionHandler : [a1b2c3d4] 请求处理完成
+```
+
+---
+
+## Redis
+
+项目已集成 Spring Data Redis + Lettuce，支持自定义序列化与健康检查。
+
+### 连接配置
+
+Redis 连接信息配置在 `application-local.yml`：
+
+```yaml
+spring:
+  redis:
+    host: 127.0.0.1
+    port: 6379
+```
+
+### 序列化方案
+
+`RedisConfig` 自定义了 `RedisTemplate<String, Object>`：
+
+- **Key / HashKey**：`StringRedisSerializer`
+- **Value / HashValue**：`Jackson2JsonRedisSerializer`，复用项目统一的 `ObjectMapper`
+
+### 健康检查
+
+启动后可通过 `GET /health/health-check` 获取 Redis 连接状态，由 `HealthServiceImpl` 通过 `RedisHealthIndicator` 检测。
 
 ---
 
