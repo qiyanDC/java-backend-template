@@ -8,7 +8,7 @@ slf4j 接管： http://www.slf4j.org/legacy.html
 -->
 
 <configuration scan="false" scanPeriod="60 second" debug="false">
-    <property name="APP_NAME" value="${app.name:-app-beibeiyu}"/>
+    <property name="APP_NAME" value="${app.name:-java-backend-template}"/>
     <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径-->
     <property name="LOG_HOME" value="${LOG_HOME:-.}/logs"/>
     <property name="CONSOLE_ENCODING" value="${console.encoding:-UTF-8}"/>
