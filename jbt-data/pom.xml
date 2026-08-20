@@ -10,16 +10,12 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>jbt-service</artifactId>
-    <packaging>jar</packaging>
-    <properties>
-        <main.class>com.example.jbt.service.Application.java</main.class>
-    </properties>
+    <artifactId>jbt-data</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>com.example.jbt</groupId>
-            <artifactId>jbt-business</artifactId>
+            <artifactId>jbt-common</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

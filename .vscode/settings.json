@@ -1,9 +1,18 @@
 {
     "java.compile.nullAnalysis.mode": "disabled",
+    "window.zoomLevel": 1,
+    "explorer.autoReveal": false,
     "java.saveActions.cleanup": true,
     "editor.codeActionsOnSave": {
         "source.organizeImports": "explicit" 
     },
     "java.debug.settings.hotCodeReplace": "auto",
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "terminal.integrated.profiles.windows": {
+        "Git Bash": {
+        "path": "D:\\tools\\PowerShell-7.6.0-preview.3-win-x64\\pwsh.exe",
+        "args": []
+        }
+    },
+    "terminal.integrated.defaultProfile.windows": "Git Bash"
 }

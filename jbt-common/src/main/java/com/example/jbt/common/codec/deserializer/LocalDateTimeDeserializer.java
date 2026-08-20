@@ -1,4 +1,4 @@
-package com.example.jbt.common.aop.deserializer;
+package com.example.jbt.common.codec.deserializer;
 
 import java.io.IOException;
 import java.time.LocalDateTime;

@@ -3,6 +3,9 @@ server:
 spring:
   application:
     name: java-backend-template
+    version: '@version@'
+  profiles:
+    active: local
 management:
   server:
     port: 8091
@@ -12,8 +15,9 @@ management:
         include: "*"
   endpoint:
     health:
-      show:
-        details: always
+      show-details: always
+    shutdown:
+      enabled: true
   metrics:
     tags:
       application: ${spring.application.name}

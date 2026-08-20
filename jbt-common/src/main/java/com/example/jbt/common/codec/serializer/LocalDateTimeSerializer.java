@@ -1,4 +1,4 @@
-package com.example.jbt.common.aop.serializer;
+package com.example.jbt.common.codec.serializer;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
